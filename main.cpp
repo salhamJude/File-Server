@@ -22,7 +22,12 @@ FILE *users;
 bool sign_flag = false;
 void cmdArgument(int argc, char *argv[]);
 void* Child(void* arg);
-
+char* parseRequest(char* input);
+char** parseArguments(char* input, int* s);
+char* handleConnexion(char* input, bool* c, int* at,char** username, char** password, char** path);
+char* ListCommand(char* path, bool c);
+void foldercheck(char* name, char** path);
+char* GetCommand(char* path, bool c, char* line);
 
 int main(int argc, char *argv[]){
 
@@ -162,4 +167,35 @@ void* Child(void* arg) //This function is the child thread that will handle the 
     } while (bytes_read > 0);
     close(client);
     return arg;
+}
+char* parseRequest(char* input){  //This function retreive the request of the user
+    char* request = strtok(strdup(input), " ");
+    char** argRequest = (char**)malloc(4 * sizeof(char*));
+    if (!argRequest) {
+        printf("Memory allocation failed!\n");
+        return NULL;
+    }
+
+    int i = 0;
+
+    char* r = strdup(request);
+    /*while (request != NULL && i < 4) {
+        argRequest[i] = strdup(request);
+        if (!argRequest[i]) {
+            printf("request : Memory allocation failed!\n");
+            return NULL;
+        }
+        request = strtok(NULL, " ");
+        i++;
+    }
+
+    for (int j = 0; j < i; j++) {
+        free(argRequest[j]);
+    }*/
+    free(argRequest);
+    int len = strlen(r);
+    if (len > 0 && r[len - 1] == '\n') {
+        r[len - 1] = '\0';  
+    }
+    return r;
 }
