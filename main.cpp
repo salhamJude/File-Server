@@ -223,3 +223,54 @@ char** parseArguments(char *input, int *s) //This function retreive the argument
     *s = i;
     return argRequest;
 }
+char* handleConnexion(char* input, bool* c, int* at,char** username, char** password, char** path){  //This function handle the connexion of the user
+    
+    char* response;
+    if(*c == true){ // check if the user is already connected
+        char** args;
+        int nbArg;
+        args = parseArguments(input, &nbArg);
+        if(nbArg == 3){
+            if(!strcmp(*username,args[1]) && !strcmp(*password,args[2])){ // check if it is the same user
+                response = (char*)"You are already logged in\n";
+                return response;
+            }else
+            { // if it is not the same user, try to connect with the new user
+                users = fopen(valueU,"r");
+                if(users){
+                    char* l = NULL;
+                    size_t len =0;
+                    bool found = false;
+                    char* val[2];
+                    while(getline(&l,&len,users) != -1){
+                        char *data = strtok(l,":");
+                        int i =0;
+                        while(data != NULL){
+                            val[i] =  data;
+                            data = strtok(NULL,":");
+                            i++;
+                        }
+                        if(!strcmp(val[0],args[1]) && !strcmp(val[1],args[2])){
+                            found = true;
+                            break;
+                        }
+                        
+                    }
+                    if(found){
+                        *c = true;
+                        *username = val[0];
+                        *password = val[1];
+                        foldercheck(*username, path);
+                        response = (char*)"200 USER granted to access\n";
+                    }else{
+                        *at += 1;
+                        response = (char*) "400 USER not found\n";
+                    }
+                    
+                }else{ // if the file which contains all the users can not be opened    
+                    response = (char*) "Can not be connected, please try again\n";
+                }
+            }
+        }
+    }
+}
