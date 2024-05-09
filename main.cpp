@@ -199,3 +199,27 @@ char* parseRequest(char* input){  //This function retreive the request of the us
     }
     return r;
 }
+char** parseArguments(char *input, int *s) //This function retreive the arguments of the command
+{
+
+    char* request = strtok(input, " ");
+    char** argRequest = (char**)malloc(4 * sizeof(char*));
+    if (!argRequest) {
+        printf("arg : Memory allocation failed!\n");
+        return NULL;
+    }
+
+    int i = 0;
+    while (request != NULL && i < 4) {
+        argRequest[i] = strdup(request);
+        if (!argRequest[i]) {
+            printf("arg : Memory allocation failed!\n");
+            return NULL;
+        }
+        request = strtok(NULL, " ");
+        i++;
+    }
+
+    *s = i;
+    return argRequest;
+}
