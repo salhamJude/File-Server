@@ -234,8 +234,7 @@ char* handleConnexion(char* input, bool* c, int* at,char** username, char** pass
             if(!strcmp(*username,args[1]) && !strcmp(*password,args[2])){ // check if it is the same user
                 response = (char*)"You are already logged in\n";
                 return response;
-            }else
-            { // if it is not the same user, try to connect with the new user
+            }else{ // if it is not the same user, try to connect with the new user
                 users = fopen(valueU,"r");
                 if(users){
                     char* l = NULL;
@@ -271,6 +270,77 @@ char* handleConnexion(char* input, bool* c, int* at,char** username, char** pass
                     response = (char*) "Can not be connected, please try again\n";
                 }
             }
+        }else{ // if the user does not enter any argument, only the command
+            *at += 1;
+            response = (char*) "400 USER not found\n";
+        }
+
+        for(int i = 0; i < nbArg; i++){
+            free(args[i]);
+        }
+        free(args);
+    }else{ // if the user is not connected yet
+        if(  3 > *at){
+            char** args;
+            int nbArg;
+            args = parseArguments(input, &nbArg);
+            if(nbArg == 0){ // if the user does not enter any argument, only the command
+                *at += 1;
+                response = (char*) "400 USER not found\n";
+            }
+            if(args){
+                if(nbArg == 3){ // if the user enter the command and the username and the password
+                    users = fopen(valueU,"r");
+                    if(users){
+                        char* l = NULL;
+                        size_t len =0;
+                        bool found = false;
+                        char* val[2];
+                        while(getline(&l,&len,users) != -1){
+                            char *data = strtok(l,":");
+                            int i =0;
+                            while(data != NULL){
+                                val[i] =  data;
+                                data = strtok(NULL,":");
+                                i++;
+                            }
+                            if(!strcmp(val[0],args[1]) && !strcmp(val[1],args[2])){
+                                found = true;
+                                break;
+                            }
+                            
+                        }
+                        if(found){ // if the user is found in the file
+                            *c = true;
+                            *username = val[0];
+                            *password = val[1];
+                            foldercheck(*username, path);
+                            response = (char*)"200 USER granted to access\n";
+                        }else{ // if the user is not found in the file
+                            *at += 1;
+                            response = (char*) "400 USER not found\n";
+                        }
+                        
+                    }else{ // if the file which contains all the users can not be opened
+                        response = (char*) "400 USER not found\n";
+                    }
+                }else{
+                    response = (char*) "Missing arguments\n";
+                }
+            }else{ // if the user does not enter any argument, only the command
+                *at += 1;
+                response = (char*) "400 USER not found\n";
+            }
+
+            for(int i = 0; i < nbArg; i++){ // free the memory
+                free(args[i]);
+            }
+            free(args);
+
+        }else{ // if the user tried more than 3 times
+            *at += 1;
+            response = (char*) "You tried more than 3 times, the system is locked, please try later\n";
         }
     }
+    return response;
 }
