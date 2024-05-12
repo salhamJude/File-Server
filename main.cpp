@@ -28,7 +28,6 @@ char* handleConnexion(char* input, bool* c, int* at,char** username, char** pass
 char* ListCommand(char* path, bool c);
 void foldercheck(char* name, char** path);
 char* GetCommand(char* path, bool c, char* line);
-long get_file_size(const char* path, const char* filename);
 
 int main(int argc, char *argv[]){
 
@@ -349,38 +348,24 @@ char* ListCommand(char *path, bool c){ //This function show all file inside the 
     if(!c){
         return (char*)"You are not connected\n";
     }
-    printf("path : %s\n",path);
-    struct dirent **namelist;
-    int n;
-    n = scandir(path, &namelist, NULL, alphasort);
+    struct dirent *dp;
+    struct stat fileStat;
+    DIR *dir = opendir(path);
 
-    char* names[n];
-    long sizes[n];
-    int size = n;
-    int tsize = 0;  
-    if (n < 0)
-        return (char*)"Cannot execute your command, please try again\n";
-    else {
-        while (n--) {
-            names[n-1] = namelist[n]->d_name;
-            
-            if (strcmp(namelist[n]->d_name, ".") == 0 || strcmp(namelist[n]->d_name, "..") == 0){
-                free(namelist[n]);
-                continue;
-            }
-            sizes[n-1] = get_file_size(path,names[n-1]);
-            free(namelist[n]);
-        }
-        free(namelist);
+    if (!dir) {
+        printf("Cannot open directory: %s\n", path);
+        return NULL;
     }
 
-}
-long get_file_size(const char* path, const char* filename) {
-    char f[strlen(path) + strlen(filename) + 3];
-    snprintf(f, sizeof(f), "%s/%s", path, filename);
-    struct stat statbuf;
-    if (stat(f, &statbuf) == 0) {
-        return statbuf.st_size; 
+    size_t bufferSize = 1024;
+    char *listing = (char *)malloc(bufferSize);
+    if (!listing) {
+        printf("Memory allocation failed.\n");
+        closedir(dir);
+        return NULL;
     }
-    return -1; 
+    listing[0] = '\0';
+
+    snprintf(listing + strlen(listing), bufferSize - strlen(listing), "Listing of directory: %s\n", path);
+
 }
