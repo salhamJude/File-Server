@@ -344,3 +344,24 @@ char* handleConnexion(char* input, bool* c, int* at,char** username, char** pass
     }
     return response;
 }
+char* ListCommand(char *path, bool c){ //This function show all file inside the user directory
+    if(!c){
+        return (char*)"You are not connected\n";
+    }
+    printf("path : %s\n",path);
+    struct dirent **namelist;
+    int n;
+    n = scandir(path, &namelist, NULL, alphasort);
+
+    char* names[n];
+    int size = n;   
+    if (n < 0)
+        return (char*)"Cannot execute your command, please try again\n";
+    else {
+        while (n--) {
+            names[n-1] = namelist[n]->d_name;
+            free(namelist[n]);
+        }
+        free(namelist);
+    }
+}
