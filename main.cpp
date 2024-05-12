@@ -28,6 +28,7 @@ char* handleConnexion(char* input, bool* c, int* at,char** username, char** pass
 char* ListCommand(char* path, bool c);
 void foldercheck(char* name, char** path);
 char* GetCommand(char* path, bool c, char* line);
+long get_file_size(const char* path, const char* filename);
 
 int main(int argc, char *argv[]){
 
@@ -373,4 +374,13 @@ char* ListCommand(char *path, bool c){ //This function show all file inside the 
         free(namelist);
     }
 
+}
+long get_file_size(const char* path, const char* filename) {
+    char f[strlen(path) + strlen(filename) + 3];
+    snprintf(f, sizeof(f), "%s/%s", path, filename);
+    struct stat statbuf;
+    if (stat(f, &statbuf) == 0) {
+        return statbuf.st_size; 
+    }
+    return -1; 
 }
