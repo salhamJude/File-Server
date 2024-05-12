@@ -354,14 +354,23 @@ char* ListCommand(char *path, bool c){ //This function show all file inside the 
     n = scandir(path, &namelist, NULL, alphasort);
 
     char* names[n];
-    int size = n;   
+    long sizes[n];
+    int size = n;
+    int tsize = 0;  
     if (n < 0)
         return (char*)"Cannot execute your command, please try again\n";
     else {
         while (n--) {
             names[n-1] = namelist[n]->d_name;
+            
+            if (strcmp(namelist[n]->d_name, ".") == 0 || strcmp(namelist[n]->d_name, "..") == 0){
+                free(namelist[n]);
+                continue;
+            }
+            sizes[n-1] = get_file_size(path,names[n-1]);
             free(namelist[n]);
         }
         free(namelist);
     }
+
 }
