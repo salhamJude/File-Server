@@ -367,5 +367,25 @@ char* ListCommand(char *path, bool c){ //This function show all file inside the 
     listing[0] = '\0';
 
     snprintf(listing + strlen(listing), bufferSize - strlen(listing), "Listing of directory: %s\n", path);
+    while ((dp = readdir(dir)) != NULL) {
+        char filepath[1024];
+        snprintf(filepath, sizeof(filepath), "%s/%s", path, dp->d_name);
 
+        if (stat(filepath, &fileStat) < 0) {
+            printf("Failed to get information about %s\n", dp->d_name);
+            continue;
+        }
+
+        // Append file/directory name and size to the listing string
+        snprintf(listing + strlen(listing), bufferSize - strlen(listing), "%-30s", dp->d_name);
+
+        if (S_ISDIR(fileStat.st_mode)) {
+            snprintf(listing + strlen(listing), bufferSize - strlen(listing), "\n");
+        } else {
+            snprintf(listing + strlen(listing), bufferSize - strlen(listing), "%lld bytes\n", (long long)fileStat.st_size);
+        }
+    }
+
+    closedir(dir);
+    return listing;
 }
