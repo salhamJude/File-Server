@@ -408,3 +408,29 @@ void foldercheck(char* name,char** path){
     *path = strdup(cp);
     free(cp);
 }
+char* GetCommand(char* path, bool c,char* line){
+    if(!c){
+        return (char*)"You are not connected\n";
+    }
+    char* response;
+    char** args;
+    int nbArg;
+    args = parseArguments(line, &nbArg);
+    if(nbArg == 2){
+        char* fpath = (char*)malloc(strlen(path) + strlen(args[1]) + 1);
+        strcat(fpath,path);
+        strcat(fpath,"/");
+        strcat(fpath,args[1]);
+        fpath[strlen(fpath)-1] = '\0';
+        printf("path : %s\n",fpath);
+
+        FILE* fp = fopen(fpath, "r");
+        if (fp == NULL) {
+            return (char*) "404 File not found.\n";
+        }
+        fseek(fp, 0, SEEK_END); 
+        long file_size = ftell(fp); 
+
+
+    }
+}
