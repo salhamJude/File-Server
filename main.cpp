@@ -430,7 +430,31 @@ char* GetCommand(char* path, bool c,char* line){
         }
         fseek(fp, 0, SEEK_END); 
         long file_size = ftell(fp); 
+        if (file_size == -1) {
+            fclose(fp);
+            return (char*) "The file is empty.";
+        }
+        fseek(fp, 0, SEEK_SET); 
+        char* buffer = (char*) malloc(file_size + 1);
+        if (buffer == NULL) {
+            fclose(fp);
+            return (char*) "Could not proceed your operation, please try again."; 
+        }
 
-
+        size_t bytes_read = fread(buffer, 1, file_size, fp);
+        if (bytes_read != (size_t)file_size) {
+            free(buffer);
+            fclose(fp);
+            return (char*) "Could not proceed your operation, please try again."; 
+        }
+        buffer[file_size] = '\0';
+        fclose(fp);
+        response = strdup(buffer);
+        free(fpath);
     }
+    else{
+        return (char*)"Missing arguments\n";
+    }
+
+    return response;
 }
