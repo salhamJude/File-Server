@@ -408,7 +408,8 @@ void foldercheck(char* name,char** path){
     *path = strdup(cp);
     free(cp);
 }
-char* GetCommand(char* path, bool c,char* line){
+char *GetCommand(char *path, bool c, char *line)
+{
     if(!c){
         return (char*)"You are not connected\n";
     }
@@ -426,17 +427,21 @@ char* GetCommand(char* path, bool c,char* line){
 
         FILE* fp = fopen(fpath, "r");
         if (fp == NULL) {
+            free(fpath);
             return (char*) "404 File not found.\n";
         }
         fseek(fp, 0, SEEK_END); 
         long file_size = ftell(fp); 
+
         if (file_size == -1) {
+            free(fpath);
             fclose(fp);
             return (char*) "The file is empty.";
         }
         fseek(fp, 0, SEEK_SET); 
         char* buffer = (char*) malloc(file_size + 1);
         if (buffer == NULL) {
+            free(fpath);
             fclose(fp);
             return (char*) "Could not proceed your operation, please try again."; 
         }
@@ -444,6 +449,7 @@ char* GetCommand(char* path, bool c,char* line){
         size_t bytes_read = fread(buffer, 1, file_size, fp);
         if (bytes_read != (size_t)file_size) {
             free(buffer);
+            free(fpath);
             fclose(fp);
             return (char*) "Could not proceed your operation, please try again."; 
         }
@@ -453,7 +459,7 @@ char* GetCommand(char* path, bool c,char* line){
         free(fpath);
     }
     else{
-        return (char*) "Missing arguments\n";
+        return (char*)"Missing arguments\n";
     }
 
     return response;
