@@ -389,3 +389,22 @@ char* ListCommand(char *path, bool c){ //This function show all file inside the 
     closedir(dir);
     return listing;
 }
+
+void foldercheck(char* name,char** path){
+    char* cp = (char*)malloc(strlen(valueD) + strlen(name) + 2);
+    if(!cp){
+        printf("Memory allocation failed!\n");
+        return;
+    }
+    strcat(cp,valueD);
+    strcat(cp,"/");
+    strcat(cp,name);
+    if (opendir(cp)) {
+        printf("Folder exists\n");
+    } else {
+        if(mkdir(cp, 0755) == 0) printf("Folder created\n");
+        else printf("Unable to create folder\n");
+    }
+    *path = strdup(cp);
+    free(cp);
+}
