@@ -453,7 +453,7 @@ char* GetCommand(char* path, bool c,char* line){
         free(fpath);
     }
     else{
-        return (char*)"Missing arguments\n";
+        return (char*) "Missing arguments\n";
     }
 
     return response;
