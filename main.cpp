@@ -490,5 +490,34 @@ char *PutCommand(char *path, bool c, char *line, int client)
         char buffer[DEFAULT_BUFLEN];
         long bytes_received = 0;
         size_t bytes_read;
+   while (1) {
+            bytes_read = recv(client, buffer, sizeof(buffer), 0);
+            if (bytes_read >= 5 && strncmp(buffer + bytes_read - 5, "\r\n.\r\n", 5) == 0) {
+                buffer[bytes_read - 5] = '\0';
+                fwrite(buffer, 1, bytes_read - 5, fp);
+                bytes_received += (bytes_read - 5);
+                break;
+            }
+            fwrite(buffer, 1, bytes_read, fp);
+            bytes_received += bytes_read;
+            memset(buffer,0,DEFAULT_BUFLEN);
+        }
+        fclose(fp);
+        free(fpath);
+
+        if (feof(stdin)) {
+            return (char*)"400 File cannot save on server side.\n";
+        }
+
+        if (ferror(stdin)) {
+            return (char*)"400 File cannot save on server side.\n";
+        }
+
+        char response[100];
+        sprintf(response, "200 File received successfully. %ld bytes transferred.\n", bytes_received);
+        return strdup(response);
+    }
+    else{
+        return (char*)"Missing arguments\n";
     }
 }
