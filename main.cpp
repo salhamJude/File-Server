@@ -28,6 +28,7 @@ char* handleConnexion(char* input, bool* c, int* at,char** username, char** pass
 char* ListCommand(char* path, bool c);
 void foldercheck(char* name, char** path);
 char* GetCommand(char* path, bool c, char* line);
+char* PutCommand(char* path, bool c, char* line, int client);
 
 int main(int argc, char *argv[]){
 
@@ -463,4 +464,31 @@ char *GetCommand(char *path, bool c, char *line)
     }
 
     return response;
+}
+char *PutCommand(char *path, bool c, char *line, int client)
+{
+    if(!c){
+        return (char*)"You are not connected\n";
+    }
+    char* response;
+    char** args;
+    int nbArg;
+    args = parseArguments(line, &nbArg);
+    if(nbArg == 2){
+        char* fpath = (char*)malloc(strlen(path) + strlen(args[1]) + 1);
+        strcat(fpath,path);
+        strcat(fpath,"/");
+        strcat(fpath,args[1]);
+        fpath[strlen(fpath)-1] = '\0';
+        printf("path : %s\n",fpath);
+
+        FILE* fp = fopen(fpath, "w");
+        if (fp == NULL) {
+            free(fpath);
+            return (char*)"400 File cannot save on server side.\n";
+        }
+        char buffer[DEFAULT_BUFLEN];
+        long bytes_received = 0;
+        size_t bytes_read;
+    }
 }
