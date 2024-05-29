@@ -465,59 +465,88 @@ char *GetCommand(char *path, bool c, char *line)
 
     return response;
 }
-char *PutCommand(char *path, bool c, char *line, int client)
-{
-    if(!c){
-        return (char*)"You are not connected\n";
-    }
-    char* response;
-    char** args;
-    int nbArg;
-    args = parseArguments(line, &nbArg);
-    if(nbArg == 2){
-        char* fpath = (char*)malloc(strlen(path) + strlen(args[1]) + 1);
-        strcat(fpath,path);
-        strcat(fpath,"/");
-        strcat(fpath,args[1]);
-        fpath[strlen(fpath)-1] = '\0';
-        printf("path : %s\n",fpath);
+char* PutCommand(char* path, bool c, char* line, int client) { //This function handle the put command
+  if (!c) {
+    return strdup("You are not connected\n");
+  }
 
-        FILE* fp = fopen(fpath, "w");
-        if (fp == NULL) {
-            free(fpath);
-            return (char*)"400 File cannot save on server side.\n";
-        }
-        char buffer[DEFAULT_BUFLEN];
-        long bytes_received = 0;
-        size_t bytes_read;
-   while (1) {
-            bytes_read = recv(client, buffer, sizeof(buffer), 0);
-            if (bytes_read >= 5 && strncmp(buffer + bytes_read - 5, "\r\n.\r\n", 5) == 0) {
-                buffer[bytes_read - 5] = '\0';
-                fwrite(buffer, 1, bytes_read - 5, fp);
-                bytes_received += (bytes_read - 5);
-                break;
-            }
-            fwrite(buffer, 1, bytes_read, fp);
-            bytes_received += bytes_read;
-            memset(buffer,0,DEFAULT_BUFLEN);
-        }
+  char* response;
+  char** args;
+  int nbArg;
+  args = parseArguments(line, &nbArg);
+
+  if (nbArg == 2) {
+    size_t path_len = strlen(path);
+    size_t arg1_len = strlen(args[1]);
+    size_t fpath_len = path_len + 1 + arg1_len + 1; 
+    char* fpath = (char*)malloc(fpath_len);
+    if (fpath == NULL) {
+      free(args); 
+      return strdup("500 Internal server error.\n");
+    }
+
+    snprintf(fpath, fpath_len, "%s/%s", path, args[1]);
+
+    FILE* fp = fopen(fpath, "w");
+    if (fp == NULL) {
+      free(fpath);
+      free(args); 
+      return strdup("400 File cannot save on server side.\n");
+    }
+
+    size_t total_data_len = 0;
+    char* all_data = NULL;
+
+    while (1) {
+      char buffer[DEFAULT_BUFLEN];
+      ssize_t bytes_read = recv(client, buffer, sizeof(buffer), 0);
+      if (bytes_read <= 0) {
+        break; 
+      }
+
+      size_t new_data_len = total_data_len + bytes_read;
+      char* new_data = (char*)realloc(all_data, new_data_len + 1); 
+      if (new_data == NULL) {
+        free(all_data); 
         fclose(fp);
         free(fpath);
+        free(args); 
+        return strdup("500 Internal server error.\n");
+      }
 
-        if (feof(stdin)) {
-            return (char*)"400 File cannot save on server side.\n";
-        }
+      all_data = new_data;
+      memcpy(all_data + total_data_len, buffer, bytes_read);
+      total_data_len = new_data_len;
 
-        if (ferror(stdin)) {
-            return (char*)"400 File cannot save on server side.\n";
-        }
-
-        char response[100];
-        sprintf(response, "200 File received successfully. %ld bytes transferred.\n", bytes_received);
-        return strdup(response);
+      if (total_data_len >= 5 && strncmp(all_data + total_data_len - 5, "\r\n.\r\n", 5) == 0) {
+        all_data[total_data_len - 5] = '\0'; 
+        fwrite(all_data, 1, total_data_len - 5, fp);
+        break;
+      }else if (total_data_len >= 3 && strncmp(all_data + total_data_len - 3, "\n.\n", 3) == 0) {
+        all_data[total_data_len - 3] = '\0'; 
+        fwrite(all_data, 1, total_data_len - 3, fp);
+        break;
+      }
     }
-    else{
-        return (char*)"Missing arguments\n";
+
+    if (ferror(fp)) { 
+      free(all_data);
+      fclose(fp);
+      free(fpath);
+      free(args); 
+      return strdup("400 File cannot save on server side.\n");
     }
+
+    fclose(fp);
+    free(all_data);
+    free(fpath);
+    free(args); 
+
+    char response[100];
+    sprintf(response, "200 File received successfully. %ld bytes transferred.\n", total_data_len - 5);
+    return strdup(response);
+  } else {
+    free(args); 
+    return strdup("Missing arguments\n");
+  }
 }
