@@ -29,6 +29,7 @@ char* ListCommand(char* path, bool c);
 void foldercheck(char* name, char** path);
 char* GetCommand(char* path, bool c, char* line);
 char* PutCommand(char* path, bool c, char* line, int client);
+char* DelCommand(char* path, bool c, char* line);
 
 int main(int argc, char *argv[]){
 
@@ -140,9 +141,15 @@ void* Child(void* arg) //This function is the child thread that will handle the 
                         printf("Send failed\n");
                     }
                 }else if(strcasecmp(r, "PUT") == 0){
-                    printf("put");
+                    response = PutCommand(path,connected,line,client);
+                    if ( !send(client,response, strlen(response), 0)) {
+                        printf("Send failed\n");
+                    }
                 }else if(strcasecmp(r, "DEL") == 0){
-                    printf("del");
+                    response = DelCommand(path,connected,line);
+                    if ( !send(client,response, strlen(response), 0)) {
+                        printf("Send failed\n");
+                    }
                 }else if(strcasecmp(r, "QUIT") == 0){
                     printf("quit");
                 }else{
@@ -549,4 +556,52 @@ char* PutCommand(char* path, bool c, char* line, int client) { //This function h
     free(args); 
     return strdup("Missing arguments\n");
   }
+}
+char *DelCommand(char *path, bool c, char *line)
+{
+     if (!c) {
+        return strdup("You are not connected\n");
+    }
+
+    char** args;
+    int nbArg;
+    args = parseArguments(line, &nbArg);
+    if(nbArg == 2) {
+        size_t path_len = strlen(path);
+        size_t arg1_len = strlen(args[1]);
+        char* f = (char*)malloc(arg1_len);
+
+        f = strdup(args[1]);
+        f[strlen(f)-1] = '\0';
+        size_t fpath_len = path_len + 1 + arg1_len + 1; 
+        int ty = 0;
+        char* fpath = (char*)malloc(fpath_len);
+        if (fpath == NULL) {
+        free(args); 
+        return (char*)"500 Internal server error.\n";
+        }
+        snprintf(fpath, fpath_len, "%s/%s", path, f);
+        printf("path : %s\n",fpath);
+        printf("path : %s\n",f);
+        if (remove(fpath) == 0) {
+            size_t message_len = sizeof("200 File   deleted successfully") + strlen(f) + 1;
+            char* success_message = (char*)malloc(message_len);
+            if (success_message == NULL) {
+            return (char*)"500 Internal server error.\n";
+            }
+            snprintf(success_message, message_len, "200 File %s deleted successfully.\n", f);
+            return success_message;
+        } else {
+            size_t message_len = sizeof("404 File  not found") + strlen(f) + 1;
+            char* not_found_message = (char*)malloc(message_len);
+            if (not_found_message == NULL) {
+                return strerror(errno); // Return system error message on allocation failure
+            }
+            snprintf(not_found_message, message_len, "404 File %s not found\n", f);
+            return not_found_message;
+        }
+    }else{
+        free(args); 
+        return (char*)"Missing arguments\n";
+    }
 }
