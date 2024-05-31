@@ -151,7 +151,11 @@ void* Child(void* arg) //This function is the child thread that will handle the 
                         printf("Send failed\n");
                     }
                 }else if(strcasecmp(r, "QUIT") == 0){
-                    printf("quit");
+                    response = (char*)"Goodbye\n";
+                    if ( !send(client,response, strlen(response), 0)) {
+                        printf("Send failed\n");
+                    }
+                    break;
                 }else{
                     if ( !send(client,"unkown command\n", sizeof("unkown command\n"), 0)) {
                         printf("Send failed\n");
@@ -373,8 +377,6 @@ char* ListCommand(char *path, bool c){ //This function show all file inside the 
         return NULL;
     }
     listing[0] = '\0';
-
-    snprintf(listing + strlen(listing), bufferSize - strlen(listing), "Listing of directory: %s\n", path);
     while ((dp = readdir(dir)) != NULL) {
         char filepath[1024];
         snprintf(filepath, sizeof(filepath), "%s/%s", path, dp->d_name);
@@ -384,7 +386,6 @@ char* ListCommand(char *path, bool c){ //This function show all file inside the 
             continue;
         }
 
-        // Append file/directory name and size to the listing string
         snprintf(listing + strlen(listing), bufferSize - strlen(listing), "%-30s", dp->d_name);
 
         if (S_ISDIR(fileStat.st_mode)) {
