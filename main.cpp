@@ -427,11 +427,10 @@ char *GetCommand(char *path, bool c, char *line)
     int nbArg;
     args = parseArguments(line, &nbArg);
     if(nbArg == 2){
-        char* fpath = (char*)malloc(strlen(path) + strlen(args[1]) + 1);
-        strcat(fpath,path);
-        strcat(fpath,"/");
-        strcat(fpath,args[1]);
-        fpath[strlen(fpath)-1] = '\0';
+        int path_len = snprintf(NULL, 0, "%s/%s", path, args[1]);
+        char* fpath = (char*)malloc(path_len + 1);
+        snprintf(fpath, path_len + 1, "%s/%s", path, args[1]);
+        fpath[path_len-1] = '\0'; 
         printf("path : %s\n",fpath);
 
         FILE* fp = fopen(fpath, "r");
@@ -448,7 +447,7 @@ char *GetCommand(char *path, bool c, char *line)
             return (char*) "The file is empty.";
         }
         fseek(fp, 0, SEEK_SET); 
-        char* buffer = (char*) malloc(file_size + 1);
+        char* buffer = (char*) malloc(file_size + 5);
         if (buffer == NULL) {
             free(fpath);
             fclose(fp);
@@ -462,10 +461,15 @@ char *GetCommand(char *path, bool c, char *line)
             fclose(fp);
             return (char*) "Could not proceed your operation, please try again."; 
         }
-        buffer[file_size] = '\0';
+        buffer[file_size+5] = '\0';
+        buffer[file_size+5-1] = '\n';
+        buffer[file_size+5-2] = '\r';
+        buffer[file_size+5-3] = '.';
+        buffer[file_size+5-4] = '\n';
+        buffer[file_size+5-5] = '\r';
+        free(fpath);
         fclose(fp);
         response = strdup(buffer);
-        free(fpath);
     }
     else{
         return (char*)"Missing arguments\n";
